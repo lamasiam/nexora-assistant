@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%92%AC</text></svg>">
+<title>Nexora Assistant</title>
+<style>
+  :root {
+    --ink: #1B2A4A;
+    --muted: #62708A;
+    --bg: #F5F6F8;
+    --panel: #FFFFFF;
+    --border: #DEE3EA;
+    --bot-bubble: #EDF1F7;
+    --accent: #E8622C;
+    --accent-soft: #FCE7DD;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+  .app {
+    width: 100%;
+    max-width: 480px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 640px;
+  }
+  header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    margin: 0 0 2px;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  header p {
+    margin: 0 0 14px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .role-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    width: fit-content;
+  }
+  .role-toggle button {
+    border: none;
+    background: transparent;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .role-toggle button.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .msg {
+    max-width: 82%;
+    padding: 10px 13px;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: #fff;
+    border-bottom-right-radius: 3px;
+  }
+  .msg.bot {
+    align-self: flex-start;
+    background: var(--bot-bubble);
+    color: var(--ink);
+    border-bottom-left-radius: 3px;
+  }
+  .msg.thinking { color: var(--muted); font-style: italic; }
+  .sources {
+    margin-top: 6px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  form {
+    display: flex;
+    gap: 8px;
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-family: inherit;
+    font-size: 0.9rem;
+  }
+  input[type="text"]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  button[type="submit"] {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  button[type="submit"]:hover { background: #0F1B33; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>Nexora Assistant</h1>
+    <p>Ask about leave, IT, onboarding, expenses, or WFH policy.</p>
+    <div class="role-toggle" id="role-toggle">
+      <button type="button" data-role="intern/trainee" class="active">Intern / Trainee</button>
+      <button type="button" data-role="full-time employee">Full-time</button>
+    </div>
+  </header>
+
+  <div id="chat">
+    <div class="msg bot">Hi! Ask me anything about Nexora R&D's internal policies.</div>
+  </div>
+
+  <form id="chat-form">
+    <input type="text" id="question" placeholder="Type your question..." autocomplete="off" required>
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+<script>
+  let currentRole = "intern/trainee";
+
+  const WELCOME = "Hi! Ask me anything about Nexora R&D's internal policies.";
+  const chatHistories = {
+    "intern/trainee": [{ text: WELCOME, sender: "bot" }],
+    "full-time employee": [{ text: WELCOME, sender: "bot" }]
+  };
+
+  const chat = document.getElementById("chat");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("question");
+
+  // Draws one message bubble into the chat window (does NOT save it to history).
+  function renderMessage(text, sender, sources) {
+    const div = document.createElement("div");
+    div.className = "msg " + sender;
+    div.textContent = text;
+    if (sources && sources.length) {
+      const src = document.createElement("div");
+      src.className = "sources";
+      src.textContent = "Source: " + sources.join(", ");
+      div.appendChild(src);
+    }
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  // Adds a message to the CURRENT role's saved history, then draws it.
+  function addMessage(text, sender, sources) {
+    chatHistories[currentRole].push({ text, sender, sources });
+    return renderMessage(text, sender, sources);
+  }
+
+  // Wipes the chat window and redraws it from the given role's saved history.
+  function renderChatFor(role) {
+    chat.innerHTML = "";
+    chatHistories[role].forEach(m => renderMessage(m.text, m.sender, m.sources));
+  }
+
+  document.querySelectorAll(".role-toggle button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".role-toggle button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentRole = btn.dataset.role;
+      renderChatFor(currentRole);
+    });
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const question = input.value.trim();
+    if (!question) return;
+
+    addMessage(question, "user");
+    input.value = "";
+    input.disabled = true;
+    form.querySelector("button").disabled = true;
+
+    // "Thinking..." is shown but deliberately NOT saved to history —
+    // it's a temporary status, not a real message.
+    const thinkingEl = renderMessage("Thinking...", "bot thinking");
+
+    try {
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, role: currentRole })
+      });
+      const data = await res.json();
+      chat.removeChild(thinkingEl);
+
+      if (data.error) {
+        addMessage("Something went wrong: " + data.error, "bot");
+      } else {
+        addMessage(data.answer, "bot", data.sources);
+      }
+    } catch (err) {
+      chat.removeChild(thinkingEl);
+      addMessage("Couldn't reach the server. Is app.py still running?", "bot");
+    } finally {
+      input.disabled = false;
+      form.querySelector("button").disabled = false;
+      input.focus();
+    }
+  });
+</script>
+
+</body>
+</html>

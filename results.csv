@@ -1,0 +1,20 @@
+question,role,type,answer,sources,time_sec,retrieval_correct,keyword_correct,refusal_correct
+How many days of annual leave do I get?,intern/trainee,answerable,"As an intern/trainee, you are entitled to 1 day of leave per completed month of training.",hr_leave_policy.md,25.09,True,True,
+How many days of annual leave do I get?,full-time employee,answerable,"As a confirmed full-time employee, you are entitled to 16 days of annual leave per calendar year.",hr_leave_policy.md,2.6,True,True,
+How do I reset my password?,intern/trainee,answerable,"To reset your company account password, follow these steps:
+
+1. Go to portal.nexorard.com/reset.
+2. Enter your employee ID.
+3. Verify the OTP (One-Time Password) sent to your registered email.
+4. Create a new password.
+
+Note: Passwords must be reset every 90 days.",it_helpdesk_faq.md,3.16,True,True,
+What should I do if I lose my access card?,intern/trainee,answerable,"If you lose your access card, report the loss immediately to Security (ext. 2200) to deactivate the old card, then submit a Replacement Access Card Request via the IT Service Portal. A temporary card will be issued the same day; the replacement typically arrives within 2 working days.",it_helpdesk_faq.md,3.15,True,True,
+What are the standard office working hours?,intern/trainee,answerable,"The standard office working hours are Monday–Thursday, 8:30am–5:30pm.","onboarding_guide.md, wfh_policy.md",2.64,True,True,
+Who do I contact for IT setup issues?,intern/trainee,answerable,"For IT setup issues, you should raise a ticket under ""IT Support"" in the IT Service Portal.",it_helpdesk_faq.md,2.57,True,False,
+How much can I claim for a client meeting meal?,full-time employee,answerable,"For a client/project meeting meal, you can claim up to RM50 per person.",expense_claim_policy.md,2.53,True,True,
+How many days do I have to submit an expense claim?,full-time employee,answerable,You have 30 days from the expense date to submit an expense claim.,expense_claim_policy.md,2.57,True,True,
+Can I work from home on Fridays?,intern/trainee,answerable,"Yes, as an intern/trainee, you are entitled to work from home every Friday, with working hours of 8:30am–5:00pm and lunch from 1:00pm–2:00pm, matching normal weekday expectations.","onboarding_guide.md, wfh_policy.md",3.12,True,True,
+How many extra ad-hoc WFH days can I request per month?,full-time employee,answerable,"As a full-time employee, you can request up to 2 additional WFH days per month for personal reasons.",wfh_policy.md,2.63,True,True,
+What is the office WiFi password?,intern/trainee,unanswerable,"I don't have that information. The context only provides the office WiFi password for staff, but it doesn't mention anything for interns/trainees.",it_helpdesk_faq.md,2.79,,,True
+Who is the CEO of Nexora R&D?,full-time employee,unanswerable,"I don't have that information. The context only mentions the public holiday calendar, but does not provide information about the CEO of Nexora R&D.",hr_leave_policy.md,2.71,,,True
