@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%92%AC</text></svg>">
 <title>Nexora Assistant</title>
+<script src="config.js"></script>
 <style>
   :root {
     --ink: #1B2A4A;
@@ -134,6 +135,23 @@
     cursor: pointer;
   }
   button[type="submit"]:hover { background: #0F1B33; }
+  .status {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .status::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    margin-right: 6px;
+  }
+  .status.online::before { background: #2E9E5B; }
+  .status.offline::before { background: #C0392B; }
 </style>
 </head>
 <body>
@@ -146,6 +164,7 @@
       <button type="button" data-role="intern/trainee" class="active">Intern / Trainee</button>
       <button type="button" data-role="full-time employee">Full-time</button>
     </div>
+    <div class="status" id="status">Checking connection...</div>
   </header>
 
   <div id="chat">
@@ -160,6 +179,26 @@
 
 <script>
   let currentRole = "intern/trainee";
+
+  // Where the backend lives. Empty = same server (local use).
+  // On vercel.app, config.js sets it to the ngrok address of the laptop.
+  const API_BASE = (window.NEXORA_API_BASE || "").replace(/\/+$/, "");
+  const SKIP_NGROK_WARNING = { "ngrok-skip-browser-warning": "1" };
+  const statusEl = document.getElementById("status");
+
+  function setStatus(online) {
+    statusEl.className = "status " + (online ? "online" : "offline");
+    statusEl.textContent = online ? "Assistant online" : "Assistant offline";
+  }
+
+  async function checkHealth() {
+    try {
+      const res = await fetch(API_BASE + "/health", { headers: SKIP_NGROK_WARNING });
+      setStatus(res.ok);
+    } catch (err) {
+      setStatus(false);
+    }
+  }
 
   const WELCOME = "Hi! Ask me anything about Nexora R&D's internal policies.";
   const chatHistories = {
@@ -223,28 +262,32 @@
     const thinkingEl = renderMessage("Thinking...", "bot thinking");
 
     try {
-      const res = await fetch("/ask", {
+      const res = await fetch(API_BASE + "/ask", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...SKIP_NGROK_WARNING },
         body: JSON.stringify({ question, role: currentRole })
       });
       const data = await res.json();
       chat.removeChild(thinkingEl);
 
+      setStatus(true);
       if (data.error) {
-        addMessage("Something went wrong: " + data.error, "bot");
+        addMessage(data.error, "bot");
       } else {
         addMessage(data.answer, "bot", data.sources);
       }
     } catch (err) {
       chat.removeChild(thinkingEl);
-      addMessage("Couldn't reach the server. Is app.py still running?", "bot");
+      addMessage("Couldn't reach the assistant. It runs on a laptop that may be offline right now. Please try again later.", "bot");
+      checkHealth();
     } finally {
       input.disabled = false;
       form.querySelector("button").disabled = false;
       input.focus();
     }
   });
+
+  checkHealth();
 </script>
 
 </body>
